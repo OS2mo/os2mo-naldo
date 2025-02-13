@@ -2599,6 +2599,23 @@ export type DefaultAddress = ResolvedAddress & {
   value: Scalars['String']['output'];
 };
 
+export type DescendantParentBoundOrganisationUnitFilter = {
+  ancestor?: InputMaybe<OrganisationUnitFilter>;
+  child?: InputMaybe<OrganisationUnitFilter>;
+  engagement?: InputMaybe<EngagementFilter>;
+  from_date?: InputMaybe<Scalars['DateTime']['input']>;
+  hierarchies?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  hierarchy?: InputMaybe<ClassFilter>;
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+  parents?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  query?: InputMaybe<Scalars['String']['input']>;
+  registration?: InputMaybe<OrganisationUnitRegistrationFilter>;
+  subtree?: InputMaybe<OrganisationUnitFilter>;
+  to_date?: InputMaybe<Scalars['DateTime']['input']>;
+  user_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+  uuids?: InputMaybe<Array<Scalars['UUID']['input']>>;
+};
+
 /** Employee/identity specific information */
 export type Employee = {
   __typename?: 'Employee';
@@ -2791,6 +2808,7 @@ export type EmployeeLeavesArgs = {
 export type EmployeeManager_RolesArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<EmployeesBoundManagerFilter>;
+  inherit?: Scalars['Boolean']['input'];
   limit?: InputMaybe<Scalars['int']['input']>;
 };
 
@@ -9031,6 +9049,11 @@ export type OrganisationUnit = {
    */
   related_units: Array<RelatedUnit>;
   /**
+   * The top-unit (root) of the organisation unit, in the hierarchy.
+   *
+   */
+  root?: Maybe<OrganisationUnit>;
+  /**
    * Time planning strategy.
    *
    */
@@ -9208,6 +9231,14 @@ export type OrganisationUnitParentArgs = {
 export type OrganisationUnitRelated_UnitsArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<OrgUnitsboundrelatedunitfilter>;
+  limit?: InputMaybe<Scalars['int']['input']>;
+};
+
+
+/** Organisation unit within the organisation tree */
+export type OrganisationUnitRootArgs = {
+  cursor?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DescendantParentBoundOrganisationUnitFilter>;
   limit?: InputMaybe<Scalars['int']['input']>;
 };
 
@@ -10448,6 +10479,7 @@ export type QueryLeavesArgs = {
 export type QueryManagersArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<ManagerFilter>;
+  inherit?: Scalars['Boolean']['input'];
   limit?: InputMaybe<Scalars['int']['input']>;
 };
 
