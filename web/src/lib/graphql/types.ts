@@ -2791,6 +2791,7 @@ export type EmployeeLeavesArgs = {
 export type EmployeeManager_RolesArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<EmployeesBoundManagerFilter>;
+  inherit?: Scalars['Boolean']['input'];
   limit?: InputMaybe<Scalars['int']['input']>;
 };
 
@@ -3210,6 +3211,7 @@ export type EmployeesBoundLeaveFilter = {
 
 export type EmployeesBoundManagerFilter = {
   employee?: InputMaybe<EmployeeFilter>;
+  exclude?: InputMaybe<EmployeeFilter>;
   from_date?: InputMaybe<Scalars['DateTime']['input']>;
   org_unit?: InputMaybe<OrganisationUnitFilter>;
   org_units?: InputMaybe<Array<Scalars['UUID']['input']>>;
@@ -3321,6 +3323,14 @@ export type Engagement = {
    */
   leave_uuid?: Maybe<Scalars['UUID']['output']>;
   /**
+   * Managerial roles for the engagement's organisation unit.
+   *
+   * May be empty in which case managers are usually inherited from parents.
+   * See the `inherit`-flag for details.
+   *
+   */
+  managers: Array<Manager>;
+  /**
    * The organisation unit where the engagement is being fulfilled.
    *
    * **Warning**:
@@ -3427,6 +3437,14 @@ export type EngagementLeaveArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<UuidsBoundLeaveFilter>;
   limit?: InputMaybe<Scalars['int']['input']>;
+};
+
+
+/** Employee engagement in an organisation unit */
+export type EngagementManagersArgs = {
+  exclude_self?: Scalars['Boolean']['input'];
+  filter?: InputMaybe<OrgUnitsboundmanagerfilter>;
+  inherit?: Scalars['Boolean']['input'];
 };
 
 
@@ -7034,6 +7052,11 @@ export type ManagerFilter = {
    * @deprecated Replaced by the 'employee' filter
    */
   employees?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  /**
+   * Employee filter for managers to exclude from the result.
+   *
+   */
+  exclude?: InputMaybe<EmployeeFilter>;
   /** Limit the elements returned by their starting validity. */
   from_date?: InputMaybe<Scalars['DateTime']['input']>;
   /**
@@ -8757,6 +8780,19 @@ export type OrgUnitsboundleavefilter = {
   uuids?: InputMaybe<Array<Scalars['UUID']['input']>>;
 };
 
+export type OrgUnitsboundmanagerfilter = {
+  employee?: InputMaybe<EmployeeFilter>;
+  employees?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  exclude?: InputMaybe<EmployeeFilter>;
+  from_date?: InputMaybe<Scalars['DateTime']['input']>;
+  org_unit?: InputMaybe<OrganisationUnitFilter>;
+  registration?: InputMaybe<ManagerRegistrationFilter>;
+  responsibility?: InputMaybe<ClassFilter>;
+  to_date?: InputMaybe<Scalars['DateTime']['input']>;
+  user_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+  uuids?: InputMaybe<Array<Scalars['UUID']['input']>>;
+};
+
 export type OrgUnitsboundrelatedunitfilter = {
   from_date?: InputMaybe<Scalars['DateTime']['input']>;
   org_unit?: InputMaybe<OrganisationUnitFilter>;
@@ -9168,8 +9204,10 @@ export type OrganisationUnitLeavesArgs = {
 
 /** Organisation unit within the organisation tree */
 export type OrganisationUnitManagersArgs = {
-  filter?: InputMaybe<ManagerFilter>;
+  cursor?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<OrgUnitsboundmanagerfilter>;
   inherit?: Scalars['Boolean']['input'];
+  limit?: InputMaybe<Scalars['int']['input']>;
 };
 
 
@@ -10448,6 +10486,7 @@ export type QueryLeavesArgs = {
 export type QueryManagersArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<ManagerFilter>;
+  inherit?: Scalars['Boolean']['input'];
   limit?: InputMaybe<Scalars['int']['input']>;
 };
 
