@@ -4541,6 +4541,8 @@ export type EmployeesBoundManagerFilter = {
 /** Employee engagement in an organisation unit */
 export type Engagement = {
   __typename?: 'Engagement';
+  /** Addresses connected to the engagement. */
+  addresses_response: AddressResponsePaged;
   /**
    *
    * The employee fulfilling the engagement.
@@ -4820,6 +4822,14 @@ export type Engagement = {
 
 
 /** Employee engagement in an organisation unit */
+export type EngagementAddresses_ResponseArgs = {
+  cursor?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<EngagementBoundAddressFilter>;
+  limit?: InputMaybe<Scalars['int']['input']>;
+};
+
+
+/** Employee engagement in an organisation unit */
 export type EngagementEmployeeArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<UuidsBoundEmployeeFilter>;
@@ -4896,6 +4906,25 @@ export type EngagementPrimaryArgs = {
   cursor?: InputMaybe<Scalars['Cursor']['input']>;
   filter?: InputMaybe<UuidsBoundClassFilter>;
   limit?: InputMaybe<Scalars['int']['input']>;
+};
+
+export type EngagementBoundAddressFilter = {
+  address_type?: InputMaybe<ClassFilter>;
+  address_type_user_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+  address_types?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  employee?: InputMaybe<EmployeeFilter>;
+  employees?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  engagements?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  from_date?: InputMaybe<Scalars['DateTime']['input']>;
+  ituser?: InputMaybe<ItUserFilter>;
+  org_unit?: InputMaybe<OrganisationUnitFilter>;
+  org_units?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  registration?: InputMaybe<AddressRegistrationFilter>;
+  registration_time?: InputMaybe<Scalars['DateTime']['input']>;
+  to_date?: InputMaybe<Scalars['DateTime']['input']>;
+  user_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+  uuids?: InputMaybe<Array<Scalars['UUID']['input']>>;
+  visibility?: InputMaybe<ClassFilter>;
 };
 
 export type EngagementBoundItUserFilter = {
