@@ -24,6 +24,7 @@
   import { required } from "svelte-forms/validators"
   import { getFacetValidities } from "$lib/http/getValidities"
   import { facetStore } from "$lib/stores/facetStore"
+  import { AddressScope, isAddressTypeFacet } from "$lib/constants/addresses"
 
   gql`
     query Class($uuid: [UUID!], $fromDate: DateTime, $toDate: DateTime) {
@@ -33,6 +34,7 @@
             uuid
             user_key
             name
+            scope
             facet_response {
               uuid
               current(at: $fromDate) {
@@ -234,6 +236,15 @@
                 }
               : undefined}
             iterable={formatITSystemNames(itSystems)}
+            required={true}
+          />
+        {/if}
+        {#if isAddressTypeFacet(facetResponse.current?.user_key)}
+          <Select
+            title={capital($_("scope"))}
+            id="scope"
+            startValue={cls.scope ? { uuid: cls.scope, name: cls.scope } : undefined}
+            iterable={AddressScope.map((scope) => ({ uuid: scope, name: scope }))}
             required={true}
           />
         {/if}

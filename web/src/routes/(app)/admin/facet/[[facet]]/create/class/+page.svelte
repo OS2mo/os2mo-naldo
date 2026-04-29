@@ -22,6 +22,7 @@
   import { getFacets } from "$lib/http/getFacets"
   import { getFacetValidities } from "$lib/http/getValidities"
   import { facetStore } from "$lib/stores/facetStore"
+  import { AddressScope, isAddressTypeFacet } from "$lib/constants/addresses"
 
   gql`
     query GetITSystems($fromDate: DateTime!) {
@@ -226,6 +227,14 @@
           id="itsystem"
           bind:value={chosenItSystem}
           iterable={formatITSystemNames(itSystems)}
+          required={true}
+        />
+      {/if}
+      {#if isAddressTypeFacet(chosenFacet?.user_key)}
+        <Select
+          title={capital($_("scope"))}
+          id="scope"
+          iterable={AddressScope.map((scope) => ({ uuid: scope, name: scope }))}
           required={true}
         />
       {/if}
