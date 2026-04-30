@@ -14,6 +14,7 @@
   import { form, field } from "svelte-forms"
   import { required, pattern } from "svelte-forms/validators"
   import CprLookup from "$lib/components/forms/shared/CPRLookup.svelte"
+  import { CPR_PATTERN } from "$lib/utils/cpr"
 
   let person: CprLookupResponse
   let nicknameFirstName: string
@@ -26,7 +27,7 @@
     seperatedLastName = person?.name?.split(" ").slice(-1).join(" ")
   }
 
-  const cprNumber = field("cpr_number", "", [required(), pattern(/^\d{6}\d{4}$/)])
+  const cprNumber = field("cpr_number", "", [required(), pattern(CPR_PATTERN)])
   const firstName = field("first_name", "", [required()])
   const lastName = field("last_name", "", [required()])
   const svelteForm = form(cprNumber, firstName, lastName)
