@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
 import { v4 as uuidv4 } from "uuid"
+import { isValidCpr } from "$lib/utils/cpr"
 
 export type EmployeeInfo = {
   uuid: string
@@ -21,14 +22,12 @@ export const createDefaultEmployee = (): EmployeeInfo => ({
   validated: undefined,
 })
 
-const cprRegex = /^\d{6}\d{4}$/
-
 export const validateEmployee = (employee: EmployeeInfo): boolean => {
   return (
     !!employee.firstName &&
     !!employee.lastName &&
     !!employee.cprNumber &&
-    cprRegex.test(employee.cprNumber.cpr_no)
+    isValidCpr(employee.cprNumber.cpr_no)
   )
 }
 

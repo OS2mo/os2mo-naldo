@@ -74,6 +74,12 @@ describe("validateEmployee", () => {
       validateEmployee({ ...valid, cprNumber: { cpr_no: "123456789a" } } as any)
     ).toBe(false)
   })
+
+  it("accepts CPR written with a dash separator", () => {
+    expect(
+      validateEmployee({ ...valid, cprNumber: { cpr_no: "010101-2345" } } as any)
+    ).toBe(true)
+  })
 })
 
 describe("validateEngagement", () => {
