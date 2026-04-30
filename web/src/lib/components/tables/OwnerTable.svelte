@@ -71,7 +71,7 @@
     }
 
     query OrgUnitOwner($uuids: [UUID!], $fromDate: DateTime, $toDate: DateTime) {
-      org_units(filter: { uuids: $uuids }) {
+      org_units(filter: { uuids: $uuids, from_date: $fromDate, to_date: $toDate }) {
         objects {
           validities {
             owners(filter: { from_date: $fromDate, to_date: $toDate }, inherit: true) {
