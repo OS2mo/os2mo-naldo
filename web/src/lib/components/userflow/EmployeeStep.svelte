@@ -9,6 +9,7 @@
   import OnboardingFormButtons from "$lib/components/userflow/OnboardingFormButtons.svelte"
   import CprLookup from "$lib/components/forms/shared/CPRLookup.svelte"
   import CPRInput from "$lib/components/userflow/CPRInput.svelte"
+  import { isValidCpr } from "$lib/utils/cpr"
 
   $: {
     const name = $employeeInfo.cprNumber?.name
@@ -22,14 +23,12 @@
       $employeeInfo.lastName = ""
     }
   }
-  const cprRegex = /^\d{6}[- ]?\d{4}$/
-
   $: cpr = $employeeInfo?.cprNumber?.cpr_no ?? ""
   $: cprErrors =
     $employeeInfo.validated === false
       ? cpr.length === 0
         ? ["required"]
-        : !cprRegex.test(cpr)
+        : !isValidCpr(cpr)
         ? ["pattern"]
         : []
       : []

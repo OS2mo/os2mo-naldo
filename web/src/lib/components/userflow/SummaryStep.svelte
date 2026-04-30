@@ -25,6 +25,7 @@
   import { graphQLClient } from "$lib/http/client"
   import { UserFlowCreateDocument } from "./query.generated"
   import { resetUserflowStores } from "$lib/stores/resetStores"
+  import { normalizeCpr } from "$lib/utils/cpr"
 
   gql`
     mutation UserFlowCreate(
@@ -74,7 +75,7 @@
     const employeeUUID = $employeeInfo.uuid
     const employeeData: EmployeeCreateInput = {
       uuid: employeeUUID,
-      cpr_number: $employeeInfo.cprNumber.cpr_no,
+      cpr_number: normalizeCpr($employeeInfo.cprNumber.cpr_no),
       given_name: $employeeInfo.firstName,
       surname: $employeeInfo.lastName,
       nickname_given_name: $employeeInfo.nicknameFirstname,

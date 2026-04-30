@@ -1,10 +1,11 @@
 import type { EmployeeCreateInput } from "$lib/graphql/types"
 import type { Actions, RequestEvent } from "@sveltejs/kit"
+import { normalizeCpr } from "$lib/utils/cpr"
 
 export const actions: Actions = {
   default: async ({ request }: RequestEvent): Promise<EmployeeCreateInput> => {
     const data = await request.formData()
-    const cprNumber = data.get("cpr-number") as string
+    const cprNumber = normalizeCpr(data.get("cpr-number") as string)
     const firstName = data.get("first-name") as string
     const lastName = data.get("last-name") as string
     const nicknameFirstName = data.get("nickname-first-name") as string
