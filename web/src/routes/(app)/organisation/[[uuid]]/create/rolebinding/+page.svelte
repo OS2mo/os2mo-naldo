@@ -68,7 +68,7 @@
   let itUser: {
     uuid: string
     name: string
-    itsystem_response: {
+    itsystem: {
       uuid: string
     }
   }
@@ -167,7 +167,7 @@
     // Make sure `currentDate` isn't sent if startDate is null.
     const params = {
       fromDate: startDate,
-      itSystem: itUser?.itsystem_response.uuid,
+      itSystem: itUser?.itsystem.uuid,
     }
 
     ;(async () => {
