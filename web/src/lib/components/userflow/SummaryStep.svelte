@@ -71,6 +71,16 @@
     }
   `
 
+  // Stepper jumps and Skip reach the summary without running a step's own
+  // validation, so a tab approved earlier can still hold data cleared since.
+  // Re-stamp on entry: the summaries and the payload below both gate on
+  // `validated`, and the submit button on the employee's.
+  employeeInfo.revalidate()
+  engagementInfo.revalidate()
+  ituserInfo.revalidate()
+  managerInfo.revalidate()
+  addressInfo.revalidate()
+
   const submitForm = async () => {
     const employeeUUID = $employeeInfo.uuid
     const employeeData: EmployeeCreateInput = {
@@ -87,11 +97,13 @@
       if (!engagement.validated) continue
       engagementData.push({
         person: employeeUUID,
-        user_key: engagement.userkey,
+        user_key: engagement.user_key,
         org_unit: engagement.orgUnit?.uuid,
-        engagement_type: engagement.engagementType.uuid,
-        job_function: engagement.jobFunction.uuid,
+        engagement_type: engagement.engagementType?.uuid,
+        job_function: engagement.jobFunction?.uuid,
         primary: engagement.primary?.uuid || null,
+        ...(engagement.extension1 && { extension_1: engagement.extension1 }),
+        ...(engagement.extension4 && { extension_4: engagement.extension4 }),
         validity: {
           from: engagement.fromDate,
           to: engagement.toDate || null,

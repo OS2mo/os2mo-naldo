@@ -140,5 +140,26 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   expect(address.address_type).toBeTruthy()
   expect(address.value).toBe("smoke@example.org")
 
+  // A Stepper jump runs no step's own validation, so a tab approved earlier
+  // keeps its stamp until the summary re-stamps on entry. Clearing the first
+  // engagement's start date must drop that engagement alone — the second tab
+  // is untouched and stays in the batch.
+  const stepTab = (index: number) =>
+    // The Stepper's tabs, not the per-entity tabs inside the form: both use
+    // daisyUI's `tab`, only the Stepper's wrapper is `tabs-border`.
+    page.locator(".tabs-border button.tab").nth(index)
+  await stepTab(1).click()
+  await page.waitForTimeout(800)
+  await page.locator('form input[name$="from"]:visible').first().fill("")
+  await stepTab(5).click()
+  await page.waitForTimeout(800)
+
+  captured = null
+  await page.locator('button:has-text("Submit")').click()
+  await page.waitForTimeout(1500)
+  expect(captured, "the summary must still submit the surviving tabs").toBeTruthy()
+  expect(captured.engagementInput).toHaveLength(1)
+  expect(captured.engagementInput[0].org_unit).toBe(fixture.unit)
+
   expect(errors).toEqual([])
 })
