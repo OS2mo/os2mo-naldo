@@ -119,8 +119,9 @@
       ituserData.push({
         person: employeeUUID,
         uuid: ituser.uuid,
-        itsystem: ituser.itSystem.uuid,
-        user_key: ituser.userkey,
+        itsystem: ituser.itSystem?.uuid,
+        user_key: ituser.user_key,
+        ...(ituser.externalId && { external_id: ituser.externalId }),
         note: ituser.notes,
         primary: ituser.primary?.uuid || null,
         validity: {
@@ -133,7 +134,7 @@
         .filter((rb) => rb.role?.uuid)
         .map((rb) => ({
           ituser: ituser.uuid,
-          role: rb.role.uuid,
+          role: rb.role?.uuid,
           validity: {
             from: ituser.fromDate,
             to: ituser.toDate || null,

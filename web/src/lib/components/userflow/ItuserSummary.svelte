@@ -24,15 +24,19 @@
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("itsystem", { values: { n: 1 } }))}:</span>
-            <span>{ituser.itSystem.name}</span>
+            <span>{ituser.itSystem?.name}</span>
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("account_name"))}:</span>
-            <span>{ituser.userkey}</span>
+            <span>{ituser.user_key}</span>
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("primary"))}:</span>
             <span>{ituser.primary?.name || ""}</span>
+          </div>
+          <div class="grid grid-cols-2">
+            <span>{capital($_("external_id"))}:</span>
+            <span>{ituser.externalId || ""}</span>
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("notes"))}:</span>

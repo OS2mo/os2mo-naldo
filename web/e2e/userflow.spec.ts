@@ -79,6 +79,7 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   const lockedAccount = await accountName.isDisabled()
   if (!lockedAccount) await accountName.fill("SMOKE01")
   const expectedAccount = lockedAccount ? await accountName.inputValue() : "SMOKE01"
+  await page.fill('form input[name$="external-id"]', "SMOKE-EXT-01")
   await pickFirstOption(page, 2) // role (0 = it system, 1 = primary)
   await next()
 
@@ -96,7 +97,8 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   await page.fill('form input[name$="value"]', "smoke@example.org")
   await next()
 
-  // Summary: submit the batch
+  // Summary: what is submitted must first be shown.
+  await expect(page.getByText("SMOKE-EXT-01")).toBeVisible()
   await page.locator('button:has-text("Submit")').click()
   await page.waitForTimeout(1500)
 
@@ -120,6 +122,7 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   expect(ituser.person).toBe(employee.uuid)
   expect(ituser.itsystem).toBeTruthy()
   expect(ituser.user_key).toBe(expectedAccount)
+  expect(ituser.external_id).toBe("SMOKE-EXT-01")
 
   // The rolebinding hangs off the ituser's client-generated uuid.
   expect(captured.rolebindingInput).toHaveLength(1)
