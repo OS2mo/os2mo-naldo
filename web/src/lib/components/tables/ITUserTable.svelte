@@ -16,7 +16,7 @@
   import editSquareOutlineRounded from "@iconify/icons-material-symbols/edit-square-outline-rounded"
   import cancelOutlineRounded from "@iconify/icons-material-symbols/cancel-outline-rounded"
   import { formatQueryDates } from "$lib/utils/validities"
-  import { getEngagementTitlesAndUuid } from "$lib/utils/display"
+  import { getEngagementDisplay } from "$lib/utils/display"
   import historyRounded from "@iconify/icons-material-symbols/history-rounded"
   import { env } from "$lib/env"
 
@@ -59,7 +59,7 @@
                       user_key
                     }
                   }
-                  uuid
+                  extension_1
                   job_function_response {
                     current(at: $fromDate) {
                       user_key
@@ -131,9 +131,13 @@
               $date
             )}
             {#if state}
-              {#each getEngagementTitlesAndUuid([state]) as nameObj}
-                <div>{nameObj.name}</div>
-              {/each}
+              <div>
+                {getEngagementDisplay(
+                  state,
+                  env.PUBLIC_SHOW_JOB_FUNCTION_USER_KEY,
+                  env.PUBLIC_SHOW_EXTENSION_1
+                )}
+              </div>
             {/if}
           {/each}
         </td>
