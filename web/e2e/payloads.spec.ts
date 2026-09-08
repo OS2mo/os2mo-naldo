@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { test } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 import fs from "fs"
 import {
   blockMutations,
@@ -30,9 +30,16 @@ const capture = (scenario: string) => (variables: unknown) => {
   fs.writeFileSync(OUT_FILE, JSON.stringify(captured, null, 2))
 }
 
-const submit = async (page: Page) => {
+const submit = async (page: Page, scenario: string) => {
   await page.locator("form button[type=submit]").click()
   await page.waitForTimeout(1500)
+  // These scenarios assert nothing about the form itself, so a submit the form
+  // blocked on validation would pass while recording nothing — and the diff
+  // would then report a missing scenario as a payload change.
+  const captured = fs.existsSync(OUT_FILE)
+    ? JSON.parse(fs.readFileSync(OUT_FILE, "utf8"))[scenario]
+    : undefined
+  expect(captured, `${scenario} submitted no mutation`).toBeTruthy()
 }
 
 test("employee create", async ({ page }) => {
@@ -44,7 +51,7 @@ test("employee create", async ({ page }) => {
   await page.fill("form input[name=user-key]", "E2E-TEST")
   await pickFirstOption(page, 0) // job function
   await pickFirstOption(page, 1) // engagement type
-  await submit(page)
+  await submit(page, "employee-create")
 })
 
 test("org create", async ({ page }) => {
@@ -56,7 +63,7 @@ test("org create", async ({ page }) => {
   await page.fill("form input[name=user-key]", "E2E-TEST")
   await pickFirstOption(page, 0)
   await pickFirstOption(page, 1)
-  await submit(page)
+  await submit(page, "org-create")
 })
 
 test("employee edit", async ({ page }) => {
@@ -68,7 +75,7 @@ test("employee edit", async ({ page }) => {
   await login(page)
   await page.waitForTimeout(1000)
   await page.fill("form input[name=user-key]", "E2E-EDITED")
-  await submit(page)
+  await submit(page, "employee-edit")
 })
 
 test("org edit", async ({ page }) => {
@@ -80,7 +87,7 @@ test("org edit", async ({ page }) => {
   await login(page)
   await page.waitForTimeout(1000)
   await page.fill("form input[name=user-key]", "E2E-EDITED")
-  await submit(page)
+  await submit(page, "org-edit")
 })
 
 test("employee create address", async ({ page }) => {
@@ -91,7 +98,7 @@ test("employee create address", async ({ page }) => {
   await pickFirstOption(page, 0) // visibility
   await pickOptionByText(page, 1, "Email") // the seeded EMAIL-scope type
   await page.fill('form input[name$="value"]', "payload@example.org")
-  await submit(page)
+  await submit(page, "employee-create-address")
 })
 
 test("employee create ituser", async ({ page }) => {
@@ -101,7 +108,7 @@ test("employee create ituser", async ({ page }) => {
   await login(page)
   await pickFirstOption(page, 0) // it system
   await page.fill('form input[name$="account-name"]', "E2E-ACCOUNT")
-  await submit(page)
+  await submit(page, "employee-create-ituser")
 })
 
 test("employee create manager", async ({ page }) => {
@@ -115,7 +122,7 @@ test("employee create manager", async ({ page }) => {
   await pickFirstOption(page, 1) // manager type (0 is the engagement select)
   await pickFirstOption(page, 2) // manager level
   await pickMultiFirstOption(page, "responsibility")
-  await submit(page)
+  await submit(page, "employee-create-manager")
 })
 
 test("create employee", async ({ page }) => {
@@ -125,7 +132,7 @@ test("create employee", async ({ page }) => {
   await page.fill("form input[name=cpr-number]", "0101904111")
   await page.fill("form input[name=first-name]", "Payload")
   await page.fill("form input[name=last-name]", "Testesen")
-  await submit(page)
+  await submit(page, "create-employee")
 })
 
 test.afterAll(() => {
