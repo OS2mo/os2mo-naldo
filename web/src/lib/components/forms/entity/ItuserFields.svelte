@@ -197,7 +197,7 @@
   />
   <Input
     bind:value={value.user_key}
-    bind:cprName={$accountNameField.value}
+    bind:validationValue={$accountNameField.value}
     errors={$accountNameField.errors}
     extra_classes="basis-1/2"
     title={capital($_("account_name"))}

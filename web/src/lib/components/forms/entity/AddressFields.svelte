@@ -189,7 +189,7 @@
       title={value.addressType.name}
       id="{idPrefix}value"
       bind:value={value.addressValue.value}
-      bind:cprName={$addressField.value}
+      bind:validationValue={$addressField.value}
       errors={$addressField.errors}
       required={true}
     />

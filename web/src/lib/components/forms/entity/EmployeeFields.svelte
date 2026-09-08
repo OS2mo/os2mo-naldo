@@ -68,7 +68,7 @@
         title={capital($_("givenname", { values: { n: 2 } }))}
         id="{idPrefix}first-name"
         bind:value={value.firstName}
-        bind:cprName={$firstNameField.value}
+        bind:validationValue={$firstNameField.value}
         errors={$firstNameField.errors}
         extra_classes="basis-1/2"
         required={true}
@@ -77,7 +77,7 @@
         title={capital($_("surname"))}
         id="{idPrefix}last-name"
         bind:value={value.lastName}
-        bind:cprName={$lastNameField.value}
+        bind:validationValue={$lastNameField.value}
         errors={$lastNameField.errors}
         extra_classes="basis-1/2"
         required={true}
@@ -89,7 +89,7 @@
         title={capital($_("givenname", { values: { n: 2 } }))}
         id="{idPrefix}first-name"
         bind:value={value.firstName}
-        bind:cprName={$firstNameField.value}
+        bind:validationValue={$firstNameField.value}
         errors={$firstNameField.errors}
         extra_classes="basis-1/2"
         required={true}
@@ -99,7 +99,7 @@
         title={capital($_("surname"))}
         id="{idPrefix}last-name"
         bind:value={value.lastName}
-        bind:cprName={$lastNameField.value}
+        bind:validationValue={$lastNameField.value}
         errors={$lastNameField.errors}
         extra_classes="basis-1/2"
         required={true}
@@ -113,7 +113,7 @@
     id="{idPrefix}cpr-number"
     placeholder={capital($_("enter_cpr"))}
     bind:value={value.cprNumber.cpr_no}
-    bind:cprName={$cprField.value}
+    bind:validationValue={$cprField.value}
     errors={$cprField.errors}
     required={true}
   />
@@ -122,7 +122,7 @@
       title={capital($_("givenname", { values: { n: 2 } }))}
       id="{idPrefix}first-name"
       bind:value={value.firstName}
-      bind:cprName={$firstNameField.value}
+      bind:validationValue={$firstNameField.value}
       errors={$firstNameField.errors}
       extra_classes="basis-1/2"
       required={true}
@@ -131,7 +131,7 @@
       title={capital($_("surname"))}
       id="{idPrefix}last-name"
       bind:value={value.lastName}
-      bind:cprName={$lastNameField.value}
+      bind:validationValue={$lastNameField.value}
       errors={$lastNameField.errors}
       extra_classes="basis-1/2"
       required={true}
