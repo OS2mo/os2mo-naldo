@@ -35,6 +35,18 @@
             </span>
             <span>{engagement.jobFunction?.name}</span>
           </div>
+          {#if env.PUBLIC_SHOW_EXTENSION_1}
+            <div class="grid grid-cols-2">
+              <span>{capital($_("job_function", { values: { n: 1 } }))}:</span>
+              <span>{engagement.extension1 || ""}</span>
+            </div>
+          {/if}
+          {#if env.PUBLIC_SHOW_EXTENSION_4}
+            <div class="grid grid-cols-2">
+              <span>{capital($_("department_code"))}:</span>
+              <span>{engagement.extension4 || ""}</span>
+            </div>
+          {/if}
           <div class="grid grid-cols-2">
             <span>
               {capital($_("engagement_type", { values: { n: 1 } }))}:
@@ -43,7 +55,7 @@
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("id"))}:</span>
-            <span>{engagement.userkey ? engagement.userkey : ""}</span>
+            <span>{engagement.user_key ? engagement.user_key : ""}</span>
           </div>
           <div class="grid grid-cols-2">
             <span>{capital($_("primary"))}:</span>

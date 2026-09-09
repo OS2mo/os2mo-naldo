@@ -1,59 +1,32 @@
-import { date } from "$lib/stores/date"
-import { get, writable } from "svelte/store"
+import {
+  createDefaultAddressValues,
+  type AddressValues,
+} from "$lib/components/forms/entity/types"
+import { createMultiStepStore, type Validatable } from "$lib/stores/createStepStore"
 
-export type AddressInfo = {
-  fromDate: string
-  toDate: string
-  visibility: { uuid: string; name: string; userkey: string } | undefined
-  addressType: { uuid: string; name: string; userkey: string; scope: string }
-  addressValue: { name?: string; value: string }
-  userkey: string
-  validated?: boolean
-}
+export type AddressInfo = AddressValues & Validatable
 
-export const createDefaultAddress = (): AddressInfo => ({
-  fromDate: get(date),
-  toDate: "",
-  visibility: undefined,
-  addressType: { uuid: "", name: "", userkey: "", scope: "" },
-  addressValue: { name: "", value: "" },
-  userkey: "",
-  validated: undefined,
-})
+// Must mirror svelte-forms' email() and AddressFields' phone pattern: if these
+// drift, the summary's re-stamp stops catching values edited into invalidity.
+const EMAIL_PATTERN =
+  /^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$/
+const PHONE_PATTERN = /^\+?\d+$/
 
 export const validateAddress = (address: AddressInfo): boolean => {
-  return (
-    !!address.fromDate && !!address.addressType?.uuid && !!address.addressValue.value
-  )
+  if (!address.fromDate || !address.addressType?.uuid || !address.addressValue.value) {
+    return false
+  }
+  switch (address.addressType.scope) {
+    case "EMAIL":
+      return EMAIL_PATTERN.test(address.addressValue.value)
+    case "PHONE":
+      return PHONE_PATTERN.test(address.addressValue.value)
+    default:
+      return true
+  }
 }
 
-export const addressInfo = (() => {
-  const defaultValue: AddressInfo[] = [createDefaultAddress()]
-
-  const { subscribe, update, set } = writable<AddressInfo[]>(defaultValue)
-
-  return {
-    subscribe,
-    set,
-    update,
-    reset: () => {
-      set([createDefaultAddress()])
-    },
-    addAddress: () => update((addresses) => [...addresses, createDefaultAddress()]),
-    removeAddress: (addressIndex: number) =>
-      update((addresses) => addresses.toSpliced(addressIndex, 1)),
-    validateForm: () => {
-      let isValid = false
-
-      update((addresses) => {
-        const updated = addresses.map((address) => {
-          return { ...address, validated: validateAddress(address) }
-        })
-        isValid = updated.every((address) => address.validated)
-
-        return updated
-      })
-      return isValid
-    },
-  }
-})()
+export const addressInfo = createMultiStepStore<AddressInfo>(
+  createDefaultAddressValues,
+  validateAddress
+)

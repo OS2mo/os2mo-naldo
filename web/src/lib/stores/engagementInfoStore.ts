@@ -1,27 +1,10 @@
-import { date } from "$lib/stores/date"
-import { get, writable } from "svelte/store"
+import {
+  createDefaultEngagementValues,
+  type EngagementValues,
+} from "$lib/components/forms/entity/types"
+import { createMultiStepStore, type Validatable } from "$lib/stores/createStepStore"
 
-export type EngagementInfo = {
-  fromDate: string
-  toDate: string
-  orgUnit: { uuid: string; name: string } | undefined
-  userkey: string
-  jobFunction: { uuid: string; name: string; userkey: string }
-  engagementType: { uuid: string; name: string; userkey: string }
-  primary: { uuid: string; name: string; userkey: string }
-  validated?: boolean
-}
-
-export const createDefaultEngagement = (): EngagementInfo => ({
-  fromDate: get(date),
-  toDate: "",
-  orgUnit: undefined,
-  userkey: "",
-  jobFunction: { uuid: "", name: "", userkey: "" },
-  engagementType: { uuid: "", name: "", userkey: "" },
-  primary: { uuid: "", name: "", userkey: "" },
-  validated: undefined,
-})
+export type EngagementInfo = EngagementValues & Validatable
 
 export const validateEngagement = (engagement: EngagementInfo): boolean => {
   return (
@@ -32,34 +15,7 @@ export const validateEngagement = (engagement: EngagementInfo): boolean => {
   )
 }
 
-export const engagementInfo = (() => {
-  const defaultValue: EngagementInfo[] = [createDefaultEngagement()]
-
-  const { subscribe, update, set } = writable<EngagementInfo[]>(defaultValue)
-
-  return {
-    subscribe,
-    set,
-    update,
-    reset: () => {
-      set([createDefaultEngagement()])
-    },
-    addEngagement: () =>
-      update((engagements) => [...engagements, createDefaultEngagement()]),
-    removeEngagement: (engagementIndex: number) =>
-      update((engagements) => engagements.toSpliced(engagementIndex, 1)),
-    validateForm: () => {
-      let isValid = false
-
-      update((engagements) => {
-        const updated = engagements.map((engagement) => {
-          return { ...engagement, validated: validateEngagement(engagement) }
-        })
-        isValid = updated.every((engagement) => engagement.validated)
-
-        return updated
-      })
-      return isValid
-    },
-  }
-})()
+export const engagementInfo = createMultiStepStore<EngagementInfo>(
+  createDefaultEngagementValues,
+  validateEngagement
+)

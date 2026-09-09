@@ -8,7 +8,7 @@
   export let id: string
   export let name: string = id
   export let value: string | number | null | undefined = undefined
-  export let cprName: string | number | null | undefined = undefined
+  export let validationValue: string | number | null | undefined = undefined
   export let startValue: string | number | null | undefined = undefined
   value = startValue ? startValue : value
   export let required = false
@@ -25,8 +25,9 @@
     node.type = type
   }
 
-  // This is only for the name inputs in create employee
-  $: cprName = value
+  // Mirrors `value` outward so a parent can hand it to a svelte-forms field
+  // without owning the input's state. Named as in DateInput.
+  $: validationValue = value
 </script>
 
 <div class="form-control pb-3 {extra_classes}">

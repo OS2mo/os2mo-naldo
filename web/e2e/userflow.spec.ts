@@ -79,6 +79,7 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   const lockedAccount = await accountName.isDisabled()
   if (!lockedAccount) await accountName.fill("SMOKE01")
   const expectedAccount = lockedAccount ? await accountName.inputValue() : "SMOKE01"
+  await page.fill('form input[name$="external-id"]', "SMOKE-EXT-01")
   await pickFirstOption(page, 2) // role (0 = it system, 1 = primary)
   await next()
 
@@ -96,7 +97,8 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   await page.fill('form input[name$="value"]', "smoke@example.org")
   await next()
 
-  // Summary: submit the batch
+  // Summary: what is submitted must first be shown.
+  await expect(page.getByText("SMOKE-EXT-01")).toBeVisible()
   await page.locator('button:has-text("Submit")').click()
   await page.waitForTimeout(1500)
 
@@ -120,6 +122,7 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   expect(ituser.person).toBe(employee.uuid)
   expect(ituser.itsystem).toBeTruthy()
   expect(ituser.user_key).toBe(expectedAccount)
+  expect(ituser.external_id).toBe("SMOKE-EXT-01")
 
   // The rolebinding hangs off the ituser's client-generated uuid.
   expect(captured.rolebindingInput).toHaveLength(1)
@@ -139,6 +142,27 @@ test("onboarding wizard submits a coherent batch", async ({ page }) => {
   expect(address.person).toBe(employee.uuid)
   expect(address.address_type).toBeTruthy()
   expect(address.value).toBe("smoke@example.org")
+
+  // A Stepper jump runs no step's own validation, so a tab approved earlier
+  // keeps its stamp until the summary re-stamps on entry. Clearing the first
+  // engagement's start date must drop that engagement alone — the second tab
+  // is untouched and stays in the batch.
+  const stepTab = (index: number) =>
+    // The Stepper's tabs, not the per-entity tabs inside the form: both use
+    // daisyUI's `tab`, only the Stepper's wrapper is `tabs-border`.
+    page.locator(".tabs-border button.tab").nth(index)
+  await stepTab(1).click()
+  await page.waitForTimeout(800)
+  await page.locator('form input[name$="from"]:visible').first().fill("")
+  await stepTab(5).click()
+  await page.waitForTimeout(800)
+
+  captured = null
+  await page.locator('button:has-text("Submit")').click()
+  await page.waitForTimeout(1500)
+  expect(captured, "the summary must still submit the surviving tabs").toBeTruthy()
+  expect(captured.engagementInput).toHaveLength(1)
+  expect(captured.engagementInput[0].org_unit).toBe(fixture.unit)
 
   expect(errors).toEqual([])
 })

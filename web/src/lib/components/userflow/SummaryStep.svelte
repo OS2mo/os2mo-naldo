@@ -71,6 +71,16 @@
     }
   `
 
+  // Stepper jumps and Skip reach the summary without running a step's own
+  // validation, so a tab approved earlier can still hold data cleared since.
+  // Re-stamp on entry: the summaries and the payload below both gate on
+  // `validated`, and the submit button on the employee's.
+  employeeInfo.revalidate()
+  engagementInfo.revalidate()
+  ituserInfo.revalidate()
+  managerInfo.revalidate()
+  addressInfo.revalidate()
+
   const submitForm = async () => {
     const employeeUUID = $employeeInfo.uuid
     const employeeData: EmployeeCreateInput = {
@@ -87,11 +97,13 @@
       if (!engagement.validated) continue
       engagementData.push({
         person: employeeUUID,
-        user_key: engagement.userkey,
+        user_key: engagement.user_key,
         org_unit: engagement.orgUnit?.uuid,
-        engagement_type: engagement.engagementType.uuid,
-        job_function: engagement.jobFunction.uuid,
+        engagement_type: engagement.engagementType?.uuid,
+        job_function: engagement.jobFunction?.uuid,
         primary: engagement.primary?.uuid || null,
+        ...(engagement.extension1 && { extension_1: engagement.extension1 }),
+        ...(engagement.extension4 && { extension_4: engagement.extension4 }),
         validity: {
           from: engagement.fromDate,
           to: engagement.toDate || null,
@@ -107,8 +119,9 @@
       ituserData.push({
         person: employeeUUID,
         uuid: ituser.uuid,
-        itsystem: ituser.itSystem.uuid,
-        user_key: ituser.userkey,
+        itsystem: ituser.itSystem?.uuid,
+        user_key: ituser.user_key,
+        ...(ituser.externalId && { external_id: ituser.externalId }),
         note: ituser.notes,
         primary: ituser.primary?.uuid || null,
         validity: {
@@ -121,7 +134,7 @@
         .filter((rb) => rb.role?.uuid)
         .map((rb) => ({
           ituser: ituser.uuid,
-          role: rb.role.uuid,
+          role: rb.role?.uuid,
           validity: {
             from: ituser.fromDate,
             to: ituser.toDate || null,
@@ -137,9 +150,9 @@
       managerData.push({
         person: employeeUUID,
         org_unit: manager.orgUnit?.uuid,
-        manager_type: manager.managerType.uuid,
-        manager_level: manager.managerLevel.uuid,
-        responsibility: manager.responsibilities.map(
+        manager_type: manager.managerType?.uuid,
+        manager_level: manager.managerLevel?.uuid,
+        responsibility: (manager.responsibilities ?? []).map(
           (responsibility) => responsibility.uuid
         ),
         validity: {
@@ -154,9 +167,9 @@
       if (!address.validated) continue
       addressData.push({
         person: employeeUUID,
-        address_type: address.addressType.uuid,
+        address_type: address.addressType?.uuid,
         value: address.addressValue.value,
-        user_key: address.userkey,
+        user_key: address.user_key,
         visibility: address.visibility?.uuid,
         validity: {
           from: address.fromDate,
