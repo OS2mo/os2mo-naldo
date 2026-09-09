@@ -55,7 +55,7 @@ export type UserflowStores = {
   addresses: AddressInfo[]
 }
 
-export type SkippedItem = {
+export type IncompleteItem = {
   entityKey: "engagement" | "ituser" | "manager" | "address"
   index: number
 }
@@ -109,8 +109,8 @@ export const isEmptyAddress = (address: AddressInfo): boolean =>
 export const buildUserflowPayload = (
   stores: UserflowStores,
   uuids: UserflowUuids
-): { payload: UserflowPayload; skipped: SkippedItem[] } => {
-  const skipped: SkippedItem[] = []
+): { payload: UserflowPayload; incomplete: IncompleteItem[] } => {
+  const incomplete: IncompleteItem[] = []
 
   const employeeInput: EmployeeCreateInput = {
     uuid: uuids.employee,
@@ -125,7 +125,7 @@ export const buildUserflowPayload = (
   stores.engagements.forEach((engagement, index) => {
     if (!engagement.validated) {
       if (!isEmptyEngagement(engagement))
-        skipped.push({ entityKey: "engagement", index })
+        incomplete.push({ entityKey: "engagement", index })
       return
     }
     engagementInput.push({
@@ -148,7 +148,7 @@ export const buildUserflowPayload = (
   const rolebindingInput: RoleBindingCreateInput[] = []
   stores.itusers.forEach((ituser, index) => {
     if (!ituser.validated) {
-      if (!isEmptyItuser(ituser)) skipped.push({ entityKey: "ituser", index })
+      if (!isEmptyItuser(ituser)) incomplete.push({ entityKey: "ituser", index })
       return
     }
     const ituserUuid = uuids.itusers[index]
@@ -183,7 +183,7 @@ export const buildUserflowPayload = (
   const managerInput: ManagerCreateInput[] = []
   stores.managers.forEach((manager, index) => {
     if (!manager.validated) {
-      if (!isEmptyManager(manager)) skipped.push({ entityKey: "manager", index })
+      if (!isEmptyManager(manager)) incomplete.push({ entityKey: "manager", index })
       return
     }
     managerInput.push({
@@ -204,7 +204,7 @@ export const buildUserflowPayload = (
   const addressInput: AddressCreateInput[] = []
   stores.addresses.forEach((address, index) => {
     if (!address.validated) {
-      if (!isEmptyAddress(address)) skipped.push({ entityKey: "address", index })
+      if (!isEmptyAddress(address)) incomplete.push({ entityKey: "address", index })
       return
     }
     addressInput.push({
@@ -229,6 +229,6 @@ export const buildUserflowPayload = (
       managerInput,
       addressInput,
     },
-    skipped,
+    incomplete,
   }
 }

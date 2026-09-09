@@ -136,7 +136,7 @@ describe("buildUserflowPayload", () => {
   // Pins the whole mutation input, not a handful of keys: this is the contract
   // with MO, so a silently dropped or renamed key has to fail here.
   it("builds the exact mutation input for a fully filled wizard run", () => {
-    const { payload, skipped } = buildUserflowPayload(
+    const { payload, incomplete } = buildUserflowPayload(
       stores({
         employee: employee({
           cprNumber: { name: "", cpr_no: "010101-2345" },
@@ -164,7 +164,7 @@ describe("buildUserflowPayload", () => {
       uuidsFor(1)
     )
 
-    expect(skipped).toEqual([])
+    expect(incomplete).toEqual([])
     expect(payload).toEqual({
       employeeInput: {
         uuid: "uuid-0",
@@ -243,20 +243,42 @@ describe("buildUserflowPayload", () => {
     expect(payload.engagementInput).toHaveLength(0)
   })
 
-  it("reports non-empty invalid items as skipped, but not clean ones", () => {
-    const touched = engagement({ validated: false, engagementType: undefined })
-    const clean = engagement({
-      validated: undefined,
-      orgUnit: undefined,
-      jobFunction: undefined,
-      engagementType: undefined,
-      user_key: "",
-    })
-    const { skipped } = buildUserflowPayload(
-      stores({ engagements: [touched, clean] }),
+  // Incomplete = not validated, but not clean either — the factories fill every
+  // field. Each entity pushes separately, so one dropped push goes unnoticed.
+  it("reports a touched but unvalidated item of every entity as incomplete", () => {
+    const { incomplete } = buildUserflowPayload(
+      stores({
+        engagements: [engagement({ validated: false })],
+        itusers: [ituser({ validated: false })],
+        managers: [manager({ validated: false })],
+        addresses: [address({ validated: false })],
+      }),
       uuidsFor(1)
     )
-    expect(skipped).toEqual([{ entityKey: "engagement", index: 0 }])
+    expect(incomplete).toEqual([
+      { entityKey: "engagement", index: 0 },
+      { entityKey: "ituser", index: 0 },
+      { entityKey: "manager", index: 0 },
+      { entityKey: "address", index: 0 },
+    ])
+  })
+
+  it("does not report a clean item as incomplete", () => {
+    const { incomplete } = buildUserflowPayload(
+      stores({
+        engagements: [
+          engagement({
+            validated: undefined,
+            orgUnit: undefined,
+            jobFunction: undefined,
+            engagementType: undefined,
+            user_key: "",
+          }),
+        ],
+      }),
+      uuidsFor(1)
+    )
+    expect(incomplete).toEqual([])
   })
 
   it("only sends extension fields when set", () => {

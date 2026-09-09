@@ -74,7 +74,7 @@
   // by position, so both must come from the same $ituserInfo.
   $: uuids = reserveUserflowUuids($ituserInfo.map((item) => item._key))
 
-  $: ({ payload } = buildUserflowPayload(
+  $: ({ payload, incomplete } = buildUserflowPayload(
     {
       employee: $employeeInfo,
       engagements: $engagementInfo,
@@ -264,6 +264,9 @@
         },
       ],
     }))
+
+  const entityLabel = (entityKey: string, index: number) =>
+    `${capital($_(entityKey, { values: { n: 1 } }))} ${index + 1}`
 </script>
 
 <div class="sm:w-full md:w-3/4 xl:w-1/2 bg-base-200 rounded-sm">
@@ -290,6 +293,21 @@
     />
   </div>
 </div>
+<!-- The employee anchors every other entity, so its demotion blocks the whole
+     submission rather than skipping one item. -->
+{#if $employeeInfo.validated !== true}
+  <div class="sm:w-full md:w-3/4 xl:w-1/2 alert alert-error rounded-sm mt-4">
+    <span>{capital($_("employee_incomplete_warning"))}</span>
+  </div>
+{/if}
+{#if incomplete.length}
+  <div class="sm:w-full md:w-3/4 xl:w-1/2 alert alert-warning rounded-sm mt-4">
+    <span>
+      {capital($_("incomplete_items_warning"))}
+      {incomplete.map((item) => entityLabel(item.entityKey, item.index)).join(", ")}
+    </span>
+  </div>
+{/if}
 <div class="sm:w-full md:w-3/4 xl:w-1/2 flex justify-between py-6 gap-4">
   <Button
     type="submit"
