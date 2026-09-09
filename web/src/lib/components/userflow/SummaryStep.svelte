@@ -1,21 +1,15 @@
 <script lang="ts">
   import { _ } from "svelte-i18n"
   import { capital } from "$lib/utils/helpers"
+  import { date } from "$lib/stores/date"
+  import { gql } from "graphql-request"
+  import Error from "$lib/components/alerts/Error.svelte"
+  import Button from "$lib/components/shared/Button.svelte"
   import EmployeeSummary from "$lib/components/userflow/EmployeeSummary.svelte"
   import EngagementSummary from "$lib/components/userflow/EngagementSummary.svelte"
   import ItuserSummary from "$lib/components/userflow/ItuserSummary.svelte"
   import ManagerSummary from "$lib/components/userflow/ManagerSummary.svelte"
   import AddressSummary from "$lib/components/userflow/AddressSummary.svelte"
-  import type { EmployeeCreateInput } from "$lib/graphql/types"
-  import type { EngagementCreateInput } from "$lib/graphql/types"
-  import type { ItUserCreateInput } from "$lib/graphql/types"
-  import type { RoleBindingCreateInput } from "$lib/graphql/types"
-  import type { ManagerCreateInput } from "$lib/graphql/types"
-  import type { AddressCreateInput } from "$lib/graphql/types"
-  import { date } from "$lib/stores/date"
-  import { gql } from "graphql-request"
-  import Error from "$lib/components/alerts/Error.svelte"
-  import Button from "$lib/components/shared/Button.svelte"
   import { success, error } from "$lib/stores/alert"
   import { employeeInfo } from "$lib/stores/employeeInfoStore"
   import { engagementInfo } from "$lib/stores/engagementInfoStore"
@@ -25,7 +19,7 @@
   import { graphQLClient } from "$lib/http/client"
   import { UserFlowCreateDocument } from "./query.generated"
   import { resetUserflowStores } from "$lib/stores/resetStores"
-  import { normalizeCpr } from "$lib/utils/cpr"
+  import { buildUserflowPayload, reserveUserflowUuids } from "$lib/userflow/mappers"
 
   gql`
     mutation UserFlowCreate(
@@ -71,121 +65,33 @@
     }
   `
 
-  // Stepper jumps and Skip reach the summary without running a step's own
-  // validation, so a tab approved earlier can still hold data cleared since.
-  // Re-stamp on entry: the summaries and the payload below both gate on
-  // `validated`, and the submit button on the employee's.
+  // An earlier-approved tab may have been edited into invalidity since; this
+  // moves it to the warning list rather than submitting it.
   employeeInfo.revalidate()
   engagementInfo.revalidate()
   ituserInfo.revalidate()
   managerInfo.revalidate()
   addressInfo.revalidate()
 
+  // Reactive, not a one-shot read: buildUserflowPayload pairs uuids to itusers
+  // by position, so both must come from the same $ituserInfo.
+  $: uuids = reserveUserflowUuids($ituserInfo.map((item) => item._key))
+
+  $: ({ payload } = buildUserflowPayload(
+    {
+      employee: $employeeInfo,
+      engagements: $engagementInfo,
+      itusers: $ituserInfo,
+      managers: $managerInfo,
+      addresses: $addressInfo,
+    },
+    uuids
+  ))
+
   const submitForm = async () => {
-    const employeeUUID = $employeeInfo.uuid
-    const employeeData: EmployeeCreateInput = {
-      uuid: employeeUUID,
-      cpr_number: normalizeCpr($employeeInfo.cprNumber.cpr_no),
-      given_name: $employeeInfo.firstName,
-      surname: $employeeInfo.lastName,
-      nickname_given_name: $employeeInfo.nicknameFirstname,
-      nickname_surname: $employeeInfo.nicknameLastname,
-    }
-
-    const engagementData: EngagementCreateInput[] = []
-    for (const engagement of $engagementInfo) {
-      if (!engagement.validated) continue
-      engagementData.push({
-        person: employeeUUID,
-        user_key: engagement.user_key,
-        org_unit: engagement.orgUnit?.uuid,
-        engagement_type: engagement.engagementType?.uuid,
-        job_function: engagement.jobFunction?.uuid,
-        primary: engagement.primary?.uuid || null,
-        ...(engagement.extension1 && { extension_1: engagement.extension1 }),
-        ...(engagement.extension4 && { extension_4: engagement.extension4 }),
-        validity: {
-          from: engagement.fromDate,
-          to: engagement.toDate || null,
-        },
-      })
-    }
-
-    const ituserData: ItUserCreateInput[] = []
-    const rolebindingData: RoleBindingCreateInput[] = []
-
-    for (const ituser of $ituserInfo) {
-      if (!ituser.validated) continue
-      ituserData.push({
-        person: employeeUUID,
-        uuid: ituser.uuid,
-        itsystem: ituser.itSystem?.uuid,
-        user_key: ituser.user_key,
-        ...(ituser.externalId && { external_id: ituser.externalId }),
-        note: ituser.notes,
-        primary: ituser.primary?.uuid || null,
-        validity: {
-          from: ituser.fromDate,
-          to: ituser.toDate || null,
-        },
-      })
-
-      const rolebindings = ituser.rolebindings
-        .filter((rb) => rb.role?.uuid)
-        .map((rb) => ({
-          ituser: ituser.uuid,
-          role: rb.role?.uuid,
-          validity: {
-            from: ituser.fromDate,
-            to: ituser.toDate || null,
-          },
-        }))
-
-      rolebindingData.push(...rolebindings)
-    }
-
-    const managerData: ManagerCreateInput[] = []
-    for (const manager of $managerInfo) {
-      if (!manager.validated) continue
-      managerData.push({
-        person: employeeUUID,
-        org_unit: manager.orgUnit?.uuid,
-        manager_type: manager.managerType?.uuid,
-        manager_level: manager.managerLevel?.uuid,
-        responsibility: (manager.responsibilities ?? []).map(
-          (responsibility) => responsibility.uuid
-        ),
-        validity: {
-          from: manager.fromDate,
-          to: manager.toDate ? manager.toDate : null,
-        },
-      })
-    }
-
-    const addressData: AddressCreateInput[] = []
-    for (const address of $addressInfo) {
-      if (!address.validated) continue
-      addressData.push({
-        person: employeeUUID,
-        address_type: address.addressType?.uuid,
-        value: address.addressValue.value,
-        user_key: address.user_key,
-        visibility: address.visibility?.uuid,
-        validity: {
-          from: address.fromDate,
-          to: address.toDate ? address.toDate : null,
-        },
-      })
-    }
-
     try {
       const mutation = await graphQLClient().request(UserFlowCreateDocument, {
-        employeeInput: employeeData,
-        engagementInput: engagementData,
-        ituserInput: ituserData,
-        rolebindingInput: rolebindingData,
-        managerInput: managerData,
-        addressInput: addressData,
+        ...payload,
         date: $date,
       })
       $success = {
