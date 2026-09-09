@@ -89,6 +89,10 @@ E2E tests:
     # Where the tests and the browser reach the stack. The browser runs in
     # the job container, which resolves the service aliases (mo, keycloak).
     BASE_URL: "http://localhost:4173"
+    # Ceiling for each readiness wait in before_script. Generous: the backing
+    # stack starts six containers at once and the realm builder retries a full
+    # apply until keycloak answers, which takes minutes on a loaded node.
+    READY_TIMEOUT: "600"
     MO_URL: "http://mo:5000"
     KEYCLOAK_URL: "http://keycloak:8080/auth"
     # Frontend runtime config, read by $env/dynamic/public when the preview
@@ -158,15 +162,54 @@ E2E tests:
             sleep 1
           done
   before_script:
-    - !reference [.services:mo-backing, before_script]
+    # Every readiness wait here is bounded. The template's own wait is an
+    # unbounded `until`, so one stalled service costs the whole job timeout and
+    # prints nothing but the same line — hence the local copy of its handshake
+    # rather than a !reference to it.
+    - |
+      probe() {
+        if curl -sf -o /dev/null --max-time 5 "$2"; then echo "  ok   $1"; else echo "  DOWN $1 ($2)"; fi
+      }
+      wait_for() {
+        deadline=$(( $(date +%s) + $3 ))
+        until curl -sf -o /dev/null --max-time 5 "$2"; do
+          if [ "$(date +%s)" -ge "$deadline" ]; then
+            echo "$1 not ready after $3s ($2)" >&2
+            return 1
+          fi
+          sleep 2
+        done
+        echo "$1 ready"
+      }
+      # GitLab does not wait for services that EXPOSE no port, so the backing
+      # stack signals readiness by touching a sentinel in the shared /builds.
+      # The last service touches it only once keycloak holds the mo realm and
+      # the dipex client, so a missing sentinel means that chain broke, not
+      # that the handshake did. See integration-test-meta.v1.yml.
+      deadline=$(( $(date +%s) + READY_TIMEOUT ))
+      until [ -f /builds/.mo-backing-services-ready ]; do
+        if [ "$(date +%s)" -ge "$deadline" ]; then
+          echo "backing services not ready after ${READY_TIMEOUT}s; probing:" >&2
+          probe "keycloak" "http://keycloak:8080/auth/realms/master"
+          probe "keycloak mo realm" "http://keycloak:8080/auth/realms/mo"
+          probe "msg-broker" "http://msg-broker:15672"
+          probe "mo" "http://mo:5000/health/ready"
+          echo "keycloak up without the mo realm means the realm-builder never" >&2
+          echo "finished. mox-db serves no HTTP and keycloak runs --db=dev-file," >&2
+          echo "so mox-db dying also surfaces here only as the missing realm." >&2
+          exit 1
+        fi
+        sleep 2
+      done
+      echo "backing services ready"
     # The playwright image has node but not yarn.
     - npm install --global yarn
     - cd web/
     - yarn
     - yarn build
     - yarn preview &
-    - until curl -sf -o /dev/null http://localhost:4173; do sleep 1; done
-    - until curl -sf -o /dev/null http://mo:5000/health/ready; do echo "waiting for MO..."; sleep 5; done
+    - wait_for "preview server" http://localhost:4173 120
+    - wait_for MO http://mo:5000/health/ready "$READY_TIMEOUT"
   script:
     - node e2e/seed.cjs
     - yarn e2e
