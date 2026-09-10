@@ -200,7 +200,7 @@
         { label: capital($_("primary")), value: dash(ituser.primary?.name) },
         { label: capital($_("external_id")), value: ituser.externalId },
         { label: capital($_("notes")), value: ituser.notes },
-        ...(ituser.rolebindings.length > 0
+        ...(ituser.rolebindings.some((rolebinding) => rolebinding.role?.uuid)
           ? [
               {
                 label: capital($_("rolebinding", { values: { n: 2 } })),
